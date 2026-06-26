@@ -9,80 +9,9 @@
     />
     <title>一个重新会疼的世界</title>
     <link rel="icon" href="./favicon.svg" type="image/svg+xml" />
-    <link rel="stylesheet" href="./styles.css" />
   </head>
   <body>
-    <main id="app" class="experience" data-state="idle">
-      <video
-        id="screen"
-        class="screen"
-        playsinline
-        preload="auto"
-        muted
-      ></video>
-
-      <div class="grain" aria-hidden="true"></div>
-      <div class="scanline" aria-hidden="true"></div>
-      <div id="fragmentLayer" class="fragment-layer" aria-hidden="true"></div>
-      <div id="scanner" class="scanner" aria-hidden="true">
-        <span id="scannerLabel">等待输入</span>
-      </div>
-
-      <section id="startPanel" class="start-panel" aria-label="作品入口">
-        <p class="kicker">AI MEMORY SYSTEM / 2000-2026</p>
-        <h1>一个重新会疼的世界</h1>
-        <p class="start-copy">
-          你十岁以后，世界开始加速。系统将尝试从身体、车站、屏幕和人群中恢复一份记忆。
-        </p>
-        <button id="startButton" class="primary-action" type="button">
-          进入
-        </button>
-      </section>
-
-      <section id="hud" class="hud" aria-label="系统状态">
-        <div class="identity">
-          <span id="chapter">00 / 待机</span>
-          <strong id="sceneTitle">记忆未启动</strong>
-        </div>
-        <div class="hud-actions">
-          <div class="meters" aria-label="记忆变量">
-            <div class="meter">
-              <span>疼痛</span>
-              <b id="painValue">00</b>
-            </div>
-            <div class="meter">
-              <span>速度</span>
-              <b id="speedValue">00</b>
-            </div>
-            <div class="meter">
-              <span>凝视</span>
-              <b id="gazeValue">00</b>
-            </div>
-          </div>
-          <button id="fullscreenButton" class="icon-action" type="button">
-            全屏
-          </button>
-        </div>
-      </section>
-
-      <section id="captionPanel" class="caption-panel" aria-live="polite">
-        <p id="systemLine"></p>
-      </section>
-
-      <section id="choices" class="hotspots" aria-label="可触摸区域"></section>
-      <p id="interactionHint" class="interaction-hint" aria-live="polite"></p>
-
-      <section id="reportPanel" class="report-panel" aria-label="生成报告">
-        <p class="kicker">GENERATED REPORT</p>
-        <h2>身体记忆报告</h2>
-        <div id="reportText" class="report-text"></div>
-        <div id="reportStats" class="report-stats"></div>
-        <button id="restartButton" class="secondary-action" type="button">
-          重新进入
-        </button>
-      </section>
-    </main>
-
-    <script src="./app.js" defer></script>
+    <div id="root"></div>
+    <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
