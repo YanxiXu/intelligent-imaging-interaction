@@ -73,6 +73,7 @@ function reportProfile(meters, path) {
 
 function App() {
   const appRef = useRef(null);
+  const stageRef = useRef(null);
   const videoRef = useRef(null);
   const timersRef = useRef({ auto: null, idle: null, fragment: null });
   const lastScanAt = useRef(0);
@@ -259,9 +260,18 @@ function App() {
   };
 
   const handleMouseMove = (event) => {
-    if (mode === "idle" || !appRef.current) return;
+    if (mode === "idle" || !stageRef.current) return;
 
-    const rect = appRef.current.getBoundingClientRect();
+    const rect = stageRef.current.getBoundingClientRect();
+    if (
+      event.clientX < rect.left ||
+      event.clientX > rect.right ||
+      event.clientY < rect.top ||
+      event.clientY > rect.bottom
+    ) {
+      return;
+    }
+
     const now = Date.now();
     const nextScanner = {
       active: true,
@@ -306,41 +316,49 @@ function App() {
       data-hotspots={hotspotsVisible ? "visible" : "hidden"}
       onMouseMove={handleMouseMove}
     >
-      <video
-        ref={videoRef}
-        className="screen"
-        playsInline
-        preload="auto"
-        muted={mode === "idle"}
-        onEnded={handleVideoEnd}
-      >
-        <source src={activeVideo} type="video/mp4" />
-      </video>
+      <DesktopIcons />
+      <section className="browser-shell" aria-label="疼痛操作系统窗口">
+        <BrowserChrome mode={mode} scene={scene} />
+        <div ref={stageRef} className="browser-stage">
+          <video
+            ref={videoRef}
+            className="screen"
+            playsInline
+            preload="auto"
+            muted={mode === "idle"}
+            onEnded={handleVideoEnd}
+          >
+            <source src={activeVideo} type="video/mp4" />
+          </video>
 
-      <div className="grain" aria-hidden="true" />
-      <div className="scanline" aria-hidden="true" />
-      <FragmentLayer fragments={fragments} />
-      <Scanner scanner={scanner} />
+          <div className="grain" aria-hidden="true" />
+          <div className="scanline" aria-hidden="true" />
+          <FragmentLayer fragments={fragments} />
+          <Scanner scanner={scanner} />
 
-      <StartPanel onStart={() => playScene("boot")} />
-      <Hud
-        mode={mode}
-        scene={scene}
-        meters={meters}
-        isFullscreen={isFullscreen}
-        onFullscreen={toggleFullscreen}
-      />
-      <Caption mode={mode} scene={scene} />
-      <Hotspots
-        visible={hotspotsVisible}
-        scene={scene}
-        onChoose={choose}
-        onHover={(label) =>
-          setScanner((current) => ({ ...current, label: `可触摸：${label}` }))
-        }
-      />
-      <InteractionHint visible={mode === "playing" && hotspotsVisible} />
-      <ReportPanel mode={mode} report={report} meters={meters} onRestart={resetExperience} />
+          <StartPanel onStart={() => playScene("boot")} />
+          <Hud
+            mode={mode}
+            scene={scene}
+            meters={meters}
+            isFullscreen={isFullscreen}
+            onFullscreen={toggleFullscreen}
+          />
+          <Caption mode={mode} scene={scene} />
+          <Hotspots
+            visible={hotspotsVisible}
+            scene={scene}
+            onChoose={choose}
+            onHover={(label) =>
+              setScanner((current) => ({ ...current, label: `可触摸：${label}` }))
+            }
+          />
+          <InteractionHint visible={mode === "playing" && hotspotsVisible} />
+          <SystemLog mode={mode} scene={scene} meters={meters} path={path} />
+          <ReportPanel mode={mode} report={report} meters={meters} onRestart={resetExperience} />
+        </div>
+        <BrowserStatus mode={mode} scene={scene} meters={meters} path={path} />
+      </section>
     </main>
   );
 }
@@ -348,14 +366,29 @@ function App() {
 function StartPanel({ onStart }) {
   return (
     <section className="start-panel" aria-label="作品入口">
-      <p className="kicker">AI MEMORY SYSTEM / 2000-2026</p>
+      <p className="kicker">IE 6.0 / BODY_MEMORY_RECOVERY / 2000-2026</p>
       <h1>一个重新会疼的世界</h1>
       <p className="start-copy">
-        你十岁以后，世界开始加速。系统将尝试从身体、车站、屏幕和人群中恢复一份记忆。
+        你十岁以后，世界开始加速。旧互联网正在读取身体、车站、屏幕和人群中延迟到来的疼痛。
       </p>
-      <button className="primary-action" type="button" onClick={onStart}>
-        进入
-      </button>
+      <div className="start-actions">
+        <button
+          className="primary-action charcoal-action"
+          type="button"
+          aria-label="重新连接"
+          onClick={onStart}
+        >
+          <span className="charcoal-word" data-text="重新连接" aria-hidden="true">
+            重新连接
+          </span>
+        </button>
+        <button className="secondary-action system-button" type="button" onClick={onStart}>
+          以访客身份进入
+        </button>
+        <button className="secondary-action system-button" type="button" onClick={onStart}>
+          跳过疼痛
+        </button>
+      </div>
     </section>
   );
 }
@@ -402,21 +435,35 @@ function Hotspots({ visible, scene, onChoose, onHover }) {
   return (
     <section className={`hotspots ${visible ? "is-visible" : ""}`} aria-label="可触摸区域">
       {visible &&
-        scene?.choices?.map((choice) => (
+        scene?.choices?.map((choice) => {
+          const tilt =
+            choice.kind === "speed" ? "4deg" : choice.kind === "gaze" ? "-3deg" : "-1deg";
+
+          return (
           <button
             key={`${choice.label}-${choice.next}`}
             className={`hotspot hotspot-${choice.kind || "portal"}`}
             type="button"
-            style={{ left: `${choice.x}%`, top: `${choice.y}%` }}
+            style={{ left: `${choice.x}%`, top: `${choice.y}%`, "--tilt": tilt }}
             aria-label={`${choice.label}。${choice.note}`}
             onMouseEnter={() => onHover(choice.label)}
             onClick={() => onChoose(choice)}
           >
-            <span className="hotspot-pulse" />
-            <span className="hotspot-label">{choice.label}</span>
-            <small>{choice.note}</small>
+            <span className="charcoal-mark" data-text={choice.label} aria-hidden="true">
+              {choice.label}
+            </span>
+            <span className="dialog-card" aria-hidden="true">
+              <span className="dialog-title">系统提示</span>
+              <span className="dialog-copy">检测到可恢复记忆</span>
+              <small>{choice.note}</small>
+              <span className="dialog-actions">
+                <i>是</i>
+                <i>否</i>
+              </span>
+            </span>
           </button>
-        ))}
+          );
+        })}
     </section>
   );
 }
@@ -452,7 +499,7 @@ function FragmentLayer({ fragments }) {
 function InteractionHint({ visible }) {
   return (
     <p className="interaction-hint" aria-live="polite">
-      {visible ? "移动鼠标扫描画面。触摸发光区域，或停留不动让系统自动归档。" : ""}
+      {visible ? "移动鼠标扫描画面。触摸手写标记，或停留不动让系统自动归档。" : ""}
     </p>
   );
 }
@@ -460,8 +507,11 @@ function InteractionHint({ visible }) {
 function ReportPanel({ mode, report, meters, onRestart }) {
   return (
     <section className="report-panel" aria-label="生成报告">
-      <p className="kicker">GENERATED REPORT</p>
-      <h2>身体记忆报告</h2>
+      <div className="report-titlebar">Internet Explorer - recovery_report.html</div>
+      <p className="kicker">GENERATED REPORT / LOCAL BODY ARCHIVE</p>
+      <h2>
+        <span className="charcoal-word" data-text="身体记忆报告">身体记忆报告</span>
+      </h2>
       <div className="report-text">
         <ReportLine label="主要路径" value={report.type} />
         <ReportLine label="时代症状" value={report.symptom} />
@@ -478,6 +528,103 @@ function ReportPanel({ mode, report, meters, onRestart }) {
         重新进入
       </button>
     </section>
+  );
+}
+
+function BrowserChrome({ mode, scene }) {
+  const title = mode === "report" ? "recovery_report.html" : scene?.title || "body_recovery.html";
+
+  return (
+    <header className="browser-chrome" aria-hidden="true">
+      <div className="titlebar">
+        <span className="window-title">Internet Explorer - {title}</span>
+        <span className="window-controls">
+          <i />
+          <i />
+          <i />
+        </span>
+      </div>
+      <div className="toolbar">
+        <span className="nav-buttons">
+          <i>后退</i>
+          <i>前进</i>
+          <i>停止</i>
+          <i>刷新</i>
+        </span>
+        <span className="address-label">地址</span>
+        <span className="address-field">http://2000.memory/body/recovery.html</span>
+        <span className="go-button">转到</span>
+      </div>
+    </header>
+  );
+}
+
+function BrowserStatus({ mode, scene, meters, path }) {
+  const status =
+    mode === "idle"
+      ? "正在连接童年记忆..."
+      : mode === "report"
+        ? "报告已生成"
+        : scene?.scan?.[0] || "正在扫描";
+
+  return (
+    <footer className="browser-status" aria-hidden="true">
+      <span>{status}</span>
+      <span>访问次数 0001990</span>
+      <span>连接速度 56K</span>
+      <span>路径 {pad(path.length)}</span>
+      <span>疼痛 {pad(meters.pain)}</span>
+    </footer>
+  );
+}
+
+function DesktopIcons() {
+  const icons = [
+    ["回收站", "bin"],
+    ["IE 6.0", "ie"],
+    ["QQ2000", "qq"],
+    ["疼痛文档", "doc"],
+  ];
+
+  return (
+    <div className="desktop-icons" aria-hidden="true">
+      {icons.map(([label, type]) => (
+        <span key={label} className={`desktop-icon desktop-icon-${type}`}>
+          <i />
+          <b>{label}</b>
+        </span>
+      ))}
+    </div>
+  );
+}
+
+function SystemLog({ mode, scene, meters, path }) {
+  const lines =
+    mode === "idle"
+      ? [
+          "[BOOT] AI_MEMORY_SYSTEM.EXE",
+          "[NET] dial-up connection: 56K",
+          "[WAIT] user input required",
+        ]
+      : mode === "report"
+        ? [
+            "[SAVE] recovery_report.html",
+            `[PATH] touched nodes: ${pad(path.length)}`,
+            "[END] pain has returned",
+          ]
+        : [
+            `[SCAN] ${scene?.scan?.[0] || "unknown signal"}`,
+            `[BODY] pain=${pad(meters.pain)} speed=${pad(meters.speed)} gaze=${pad(meters.gaze)}`,
+            `[CACHE] ${scene?.chapter || "00"} / ${scene?.title || "loading"}`,
+          ];
+
+  return (
+    <aside className="system-log" aria-label="系统日志">
+      <div className="system-log-title">system.log</div>
+      {lines.map((line) => (
+        <p key={line}>{line}</p>
+      ))}
+    </aside>
   );
 }
 
